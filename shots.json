@@ -1,5 +1,1 @@
-[
-  { "name": "1-cover.jpg", "query": "?shot=cover&photo=pier&caption=Sunset%20Heist", "w": 1080, "h": 1080 },
-  { "name": "2-editor.jpg", "query": "?shot=editor&photo=boulevard&caption=Boulevard%20Queen", "w": 1280, "h": 720 },
-  { "name": "3-cover.jpg", "query": "?shot=cover&photo=boulevard&caption=Boulevard%20Queen", "w": 1080, "h": 1080 }
-]
+[{"h":720,"name":"1-cover.jpg","query":"?shot=cover&layout=trio&grade=sunset&size=wide&photo1=pier&photo2=boulevard&title=SUNSET%20HEIST&subtitle=LEONIDA%20NIGHTS","w":1280},{"h":720,"name":"2-editor.jpg","query":"?shot=editor&layout=trio&grade=sunset&size=wide&photo1=pier&photo2=boulevard&title=SUNSET%20HEIST&subtitle=LEONIDA%20NIGHTS","w":1280},{"h":1080,"name":"3-cover-square.jpg","query":"?shot=cover&layout=duo-v&grade=neon&size=square&photo1=boulevard&photo2=pier&title=NEON%20PALMS&subtitle=VICE%20CITY%20AFTER%20DARK&color=%2337e6ff","w":1080},{"h":1280,"name":"4-cover-portrait.jpg","query":"?shot=cover&layout=quad&grade=pink&size=portrait&photo1=pier&photo2=boulevard&title=BOULEVARD%20QUEEN&subtitle=TWO%20CITIES%20ONE%20NIGHT","w":1024}]

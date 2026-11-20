@@ -3,20 +3,92 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cover Snap</title>
+<title>Vice City Cover Maker</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23140a1e'/%3E%3Ccircle cx='16' cy='14' r='8' fill='%23ff9a3d'/%3E%3Crect y='20' width='32' height='12' fill='%23ff5da2'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+<header class="top">
+  <div>
+    <h1>Vice City Cover Maker</h1>
+    <p>Your photo, a few panels, one bold caption — a GTA-style cover in a minute.</p>
+  </div>
+  <p class="top-note">Photos stay on your machine. Nothing is uploaded.</p>
+</header>
 <main class="app">
-  <section class="controls">
-    <h1>Cover Snap</h1>
-    <p>A photo and a caption, made into a square cover.</p>
-    <label>Photo <input id="photo" type="file" accept="image/*"></label>
-    <label>Caption <input id="caption" type="text" maxlength="40" value="Sunset Heist"></label>
-    <button id="export" type="button">Export PNG 1080 x 1080</button>
-    <p id="status" role="status"></p>
+  <section class="controls" aria-label="Cover controls">
+    <section class="group">
+      <h2>1 · Photos</h2>
+      <label class="file-label">Add your photos
+        <input id="addPhotos" type="file" accept="image/*" multiple>
+      </label>
+      <div id="strip" class="strip" aria-label="Loaded photos"></div>
+      <div class="row">
+        <button id="usePhoto" type="button">Use in selected panel</button>
+        <button id="fillAll" type="button">Fill all panels</button>
+      </div>
+      <p class="hint">Double-click a photo to put it in the selected panel. Drag photos onto the cover too.</p>
+    </section>
+
+    <section class="group">
+      <h2>2 · Panels</h2>
+      <div id="panels" class="stack"></div>
+      <label>Zoom the selected panel
+        <input id="zoom" type="range" min="1" max="2.5" step="0.05" value="1">
+      </label>
+      <div class="row">
+        <span id="zoomOut" class="zoom-out">Zoom 1.00×</span>
+        <button id="fitPhoto" type="button">Fit photo</button>
+      </div>
+      <p class="hint">Click a panel on the cover to select it, then drag its photo to move it.</p>
+    </section>
+
+    <section class="group">
+      <h2>3 · Layout</h2>
+      <div id="layouts" class="picks"></div>
+    </section>
+
+    <section class="group">
+      <h2>4 · Post size</h2>
+      <div id="sizes" class="picks"></div>
+    </section>
+
+    <section class="group">
+      <h2>5 · Colour grade</h2>
+      <div id="grades" class="picks"></div>
+    </section>
+
+    <section class="group">
+      <h2>6 · Caption</h2>
+      <label>Title
+        <input id="title" type="text" maxlength="40" value="SUNSET HEIST">
+      </label>
+      <label>Subtitle / tagline
+        <input id="subtitle" type="text" maxlength="40" value="LEONIDA NIGHTS">
+      </label>
+      <label>Title size
+        <input id="titleSize" type="range" min="0.7" max="1.4" step="0.05" value="1">
+      </label>
+      <div class="row between">
+        <span class="field-label">Title colour</span>
+        <span id="swatches" class="swatches"></span>
+      </div>
+      <div class="row">
+        <label class="radio"><input type="radio" name="captionPos" value="bottom" checked> Bottom</label>
+        <label class="radio"><input type="radio" name="captionPos" value="top"> Top</label>
+      </div>
+    </section>
+
+    <section class="group export-group">
+      <button id="export" type="button" class="export">Export PNG</button>
+      <p id="status" role="status">Two sample photos are loaded — pick a layout and export.</p>
+    </section>
   </section>
-  <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
+
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="cover" width="1920" height="1080" aria-label="The cover"></canvas>
+    <p class="hint">Click a panel to select it · drag to move its photo · drop photos onto the cover.</p>
+  </section>
 </main>
 <script type="module" src="./src/main.js"></script>
 </body>
