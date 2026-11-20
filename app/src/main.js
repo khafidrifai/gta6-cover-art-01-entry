@@ -6,8 +6,8 @@
 // The preview canvas is the same drawing as the export, at a smaller size:
 // drawCover paints any state at any pixel size, so what you see is what the
 // PNG holds.
-import { drawCover, exportSize } from './cover.js';
-import { defaultState, panelCount, panelRects, SIZES, LAYOUTS, GRADES, TITLE_COLORS, TITLE_STYLES } from './state.js';
+import { drawCover, exportSize, ensureFonts } from './cover.js';
+import { defaultState, panelCount, panelRects, SIZES, LAYOUTS, GRADES, TITLE_COLORS, TITLE_STYLES, TITLE_FONTS } from './state.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
@@ -111,6 +111,30 @@ function buildPanelGradePicker() {
       box.querySelectorAll('.pick').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       redraw();
+    });
+    box.append(btn);
+  });
+}
+
+/** Builds the title font picker: each font's name is set in its own face,
+ * so the picker shows what the font looks like before you pick it. The
+ * faces are preloaded at startup, so picking one repaints at once. */
+function buildTitleFontPicker() {
+  const box = document.getElementById('titleFonts');
+  box.innerHTML = '';
+  Object.entries(TITLE_FONTS).forEach(([key, def]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pick font' + (key === state.titleFont ? ' active' : '');
+    btn.dataset.font = key;
+    btn.textContent = def.label;
+    btn.style.fontFamily = `"${def.family}", "Noto Sans", sans-serif`;
+    if (def.hint) btn.title = def.hint;
+    btn.addEventListener('click', () => {
+      state.titleFont = key;
+      box.querySelectorAll('.pick').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      ensureFonts().then(() => redraw());
     });
     box.append(btn);
   });
@@ -248,8 +272,11 @@ function clamp(v, lo, hi) {
   return Math.min(hi, Math.max(lo, v));
 }
 
-/** Exports the cover at its exact post size and downloads the PNG. */
-function exportPng() {
+/** Exports the cover at its exact post size and downloads the PNG.
+ * The fonts are awaited first: an export drawn before a face arrives
+ * would silently fall back to a system font. */
+async function exportPng() {
+  await ensureFonts();
   const { w, h } = exportSize(state);
   const off = document.createElement('canvas');
   off.width = w;
@@ -286,6 +313,7 @@ function wire() {
   buildSwatches();
   buildPanelGradePicker();
   buildTitleStylePicker();
+  buildTitleFontPicker();
 
   const panelBox = document.getElementById('panels');
   for (let i = 0; i < 5; i++) {
@@ -350,12 +378,10 @@ function wire() {
     addFiles(e.dataTransfer.files);
   });
 
-  // The bundled poster fonts, then paint once they are ready.
-  if (document.fonts) {
-    document.fonts.load('900 100px "Cover Black"').catch(() => {});
-    document.fonts.load('700 40px "Cover Bold"').catch(() => {});
-    document.fonts.ready.then(() => redraw());
-  }
+  // The bundled fonts, then paint once they are ready. Every face is
+  // loaded up front, so switching fonts in the picker repaints at once
+  // and an early export never falls back to a system font.
+  ensureFonts().then(() => redraw());
 }
 
 /** Loads the two sample photos, then opens the editor on them. */

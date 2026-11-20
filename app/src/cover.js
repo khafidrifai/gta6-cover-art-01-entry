@@ -7,7 +7,22 @@
 // thin pale frame line, a sunset or neon grade washed over everything, and a
 // heavy outlined caption sitting on a dark scrim so it reads on any photo.
 
-import { SIZES, panelRects } from './state.js';
+import { SIZES, panelRects, TITLE_FONTS } from './state.js';
+
+/** Loads every bundled font face, so a draw never falls back to a system
+ * font. Call it before any export or screenshot: the editor preloads the
+ * faces at startup, but an export clicked before they arrive would draw the
+ * fallback instead — the same bug class as drawing a photo before it loads. */
+export async function ensureFonts() {
+  if (!document.fonts) return;
+  const loads = [];
+  for (const fdef of Object.values(TITLE_FONTS)) {
+    loads.push(document.fonts.load(`${fdef.weight} 100px "${fdef.family}"`).catch(() => {}));
+  }
+  loads.push(document.fonts.load('700 40px "Cover Bold"').catch(() => {}));
+  await Promise.all(loads);
+  await document.fonts.ready.catch(() => {});
+}
 
 /** The accent colours each grade paints with, and how hard it paints them.
  * top/bottom are the duotone ends, accent is the slash and badge colour,
@@ -190,22 +205,33 @@ function paintCaption(ctx, state, w, h) {
   ctx.textBaseline = 'alphabetic';
 
   if (title) {
-    let size = base;
-    ctx.font = `900 ${size}px "Cover Black", "Noto Sans", sans-serif`;
-    try { ctx.letterSpacing = `${Math.round(size * 0.03)}px`; } catch { /* older canvas: no letter spacing */ }
+    // The title face: weight, tracking, lean and size all come from the
+    // font's own definition, so a condensed face sits tight and a wide face
+    // is scaled down — every font fills the cover the same way.
+    const fdef = TITLE_FONTS[state.titleFont] || TITLE_FONTS.anton;
+    let size = base * fdef.scale;
+    const setTitleFont = (s) => {
+      ctx.font = `${fdef.weight} ${s}px "${fdef.family}", "Noto Sans", sans-serif`;
+      try { ctx.letterSpacing = `${Math.round(s * fdef.track)}px`; } catch { /* older canvas: no letter spacing */ }
+    };
+    setTitleFont(size);
     while (ctx.measureText(title).width > w * 0.92 && size > 14) {
       size -= 2;
-      ctx.font = `900 ${size}px "Cover Black", "Noto Sans", sans-serif`;
-      try { ctx.letterSpacing = `${Math.round(size * 0.03)}px`; } catch { /* ignore */ }
+      setTitleFont(size);
     }
     const ty = atTop ? h * 0.16 : h - h * 0.1;
     const style = state.titleStyle || 'solid';
     const def = GRADE_DEFS[state.grade] || GRADE_DEFS.none;
     const ink = state.titleColor || '#ffffff';
     ctx.lineJoin = 'round';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-    ctx.shadowBlur = size * 0.18;
-    ctx.shadowOffsetY = size * 0.04;
+    // A stronger shadow than round 2, so the title lifts off any photo.
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = size * 0.22;
+    ctx.shadowOffsetY = size * 0.05;
+    ctx.save();
+    // A slight forward lean for speed, sheared around the title's baseline
+    // point so the centred title stays centred.
+    if (fdef.skew) ctx.transform(1, 0, fdef.skew, 1, -fdef.skew * ty, 0);
     if (style === 'gradient') {
       // The title fades through the grade's colours, left to right.
       const grad = ctx.createLinearGradient(cx - w * 0.3, 0, cx + w * 0.3, 0);
@@ -241,20 +267,35 @@ function paintCaption(ctx, state, w, h) {
       ctx.fillStyle = ink;
       ctx.fillText(title, cx, ty);
     }
+    ctx.restore();
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
   }
 
   if (subtitle) {
-    const subSize = Math.max(12, h * 0.032 * (state.titleSize || 1));
-    ctx.font = `700 ${subSize}px "Cover Bold", "Noto Sans", sans-serif`;
-    try { ctx.letterSpacing = `${Math.round(subSize * 0.42)}px`; } catch { /* ignore */ }
+    // The subtitle follows the title's font, at its own size with airy
+    // tracking, and shrinks itself until it fits — a wide face at small
+    // size must never spill off the cover.
+    const fdef = TITLE_FONTS[state.titleFont] || TITLE_FONTS.anton;
+    let subSize = Math.max(12, h * 0.032 * (state.titleSize || 1));
+    const setSubFont = (s) => {
+      ctx.font = `${fdef.weight} ${s}px "${fdef.family}", "Noto Sans", sans-serif`;
+      try { ctx.letterSpacing = `${Math.round(s * Math.max(fdef.track, 0.18))}px`; } catch { /* ignore */ }
+    };
+    setSubFont(subSize);
+    while (ctx.measureText(subtitle).width > w * 0.92 && subSize > 10) {
+      subSize -= 1;
+      setSubFont(subSize);
+    }
     const sy = atTop
       ? h * 0.16 + base * 0.72
       : h - h * 0.1 + subSize * 1.5;
+    ctx.save();
+    if (fdef.skew) ctx.transform(1, 0, fdef.skew, 1, -fdef.skew * sy, 0);
     ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
     ctx.fillText(subtitle, cx, sy);
+    ctx.restore();
     try { ctx.letterSpacing = '0px'; } catch { /* ignore */ }
   }
 

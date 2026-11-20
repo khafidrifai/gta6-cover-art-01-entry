@@ -13,6 +13,49 @@
   font-style: normal;
   font-display: swap;
 }
+/* Round 3 display fonts, all SIL OFL (licence text beside each file). */
+@font-face {
+  font-family: "Title Anton";
+  src: url("./fonts/Anton-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Title Bebas";
+  src: url("./fonts/BebasNeue-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Title Monoton";
+  src: url("./fonts/Monoton-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Title Alfa";
+  src: url("./fonts/AlfaSlabOne-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Title Bungee";
+  src: url("./fonts/Bungee-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Title Archivo";
+  src: url("./fonts/ArchivoBlack-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: #17101f; color: #f3eef7; font: 15px/1.45 system-ui, sans-serif; }
@@ -62,6 +105,10 @@ button:disabled { opacity: 0.4; cursor: default; }
 .picks { display: flex; flex-wrap: wrap; gap: 8px; }
 .pick { padding: 8px 11px; font-size: 13px; }
 .pick.active { background: #ff5da2; color: #fff; }
+/* Font picker buttons: each name is set in its own face, so the picker
+ * shows what the font looks like before you pick it. */
+.pick.font { font-size: 19px; line-height: 1.1; padding: 8px 12px; }
+.pick.font.active { background: #ff5da2; color: #fff; }
 .pick.mini { padding: 6px 9px; font-size: 12px; }
 .stack { display: flex; flex-direction: column; gap: 8px; }
 .stack button { text-align: left; font-weight: 600; }

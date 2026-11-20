@@ -43,6 +43,24 @@ export const TITLE_STYLES = {
   outline: { label: 'Outline', hint: 'Hollow letters, thick coloured edge' },
 };
 
+/** The title fonts, all bundled under app/fonts/ under the SIL Open Font
+ * License — no Rockstar font anywhere. Each entry tunes how the face is set:
+ * `family` is the @font-face name, `weight` the weight the file carries,
+ * `track` the letter-spacing as a fraction of the title size (condensed
+ * faces want air, wide faces want none), `skew` a slight forward lean for
+ * speed (radians, applied as a shear), and `scale` a size correction — a
+ * face that draws small at the same point size gets scaled up. The subtitle
+ * follows the title's font, at its own size and tracking. */
+export const TITLE_FONTS = {
+  anton: { label: 'Anton', family: 'Title Anton', weight: 400, track: 0.01, skew: -0.06, scale: 1.0, hint: 'Heavy condensed poster caps' },
+  bebas: { label: 'Bebas Neue', family: 'Title Bebas', weight: 400, track: 0.05, skew: -0.04, scale: 1.14, hint: 'Tall condensed caps' },
+  monoton: { label: 'Monoton', family: 'Title Monoton', weight: 400, track: 0.02, skew: 0, scale: 0.94, hint: 'Neon-tube lettering' },
+  alfa: { label: 'Alfa Slab', family: 'Title Alfa', weight: 400, track: 0.0, skew: 0, scale: 0.96, hint: 'Bold slab serif' },
+  bungee: { label: 'Bungee', family: 'Title Bungee', weight: 400, track: 0.0, skew: 0, scale: 0.9, hint: 'Chunky stacked display' },
+  archivo: { label: 'Archivo Black', family: 'Title Archivo', weight: 400, track: 0.0, skew: 0, scale: 0.96, hint: 'Extra-heavy grotesque' },
+  noto: { label: 'Noto Black', family: 'Cover Black', weight: 900, track: 0.03, skew: 0, scale: 1.0, hint: 'Clean heavy sans' },
+};
+
 /** A fresh cover: the two sample photos already loaded, trio layout, sunset grade.
  * A panel's `grade` is its own colour grade, or null to follow the cover's
  * grade: the same photo in two panels with different crops and different
@@ -55,6 +73,7 @@ export function defaultState() {
     title: 'SUNSET HEIST',
     subtitle: 'LEONIDA NIGHTS',
     titleSize: 1,
+    titleFont: 'anton',
     titleColor: '#ffffff',
     titleStyle: 'solid',
     badge: '',

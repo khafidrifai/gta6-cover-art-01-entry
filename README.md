@@ -10,6 +10,10 @@ Vice City Cover Maker — turn your own photos and a caption into GTA-style cove
 
 More variety, more colour, sharper art. Nine panel layouts (Solo, Duo side-by-side and stacked, two Trios, Quad, Big Centre, Film Strip, and Five), seven colour grades plus Original — Sunset, Neon Nights, Vice Pink, Ocean Drive, Hotline, Midnight, and Gold Rush — and each panel can now carry its own grade, so the same photo reads differently in every panel. The grades hit harder too: a saturation and contrast boost plus a strong duotone wash per panel, instead of the round-1 whisper. The caption has three styles (Solid, Gradient, Outline), two more colours, and a badge/sticker line. The preview renders at the full post size with high-quality smoothing, so the lettering stays crisp.
 
+## What's new in round 3
+
+Cooler fonts. Seven display faces to pick from, all bundled under `app/fonts/` under the SIL Open Font License: Anton (heavy condensed poster caps), Bebas Neue (tall condensed), Monoton (neon-tube lettering), Alfa Slab One (bold slab serif), Bungee (chunky stacked display), Archivo Black (extra-heavy grotesque), and Noto Black (the clean one). The font picker shows each name set in its own face, and the subtitle follows the title's font. Every face is tuned on its own — tracking, a slight forward lean for speed on the condensed faces, and a size correction so a wide face never spills off the cover — with a stronger outline and drop shadow behind the title. Fonts are preloaded at startup and every export awaits them, so a cover never falls back to a system font.
+
 ## Run it
 
 ```sh
@@ -24,7 +28,7 @@ Then open http://localhost:8080 — add photos (or use the two samples), pick a 
 - `app/src/state.js` holds the cover's state: post size, panel layout, grade, caption, and one zoom-and-pan crop per panel.
 - `app/src/main.js` wires the editor: file input and drag-and-drop, panel picking and dragging, the pickers, and the export.
 - `app/src/shots.js` sets up fixed scenes (`?shot=cover` / `?shot=editor`) for the screenshots.
-- The poster lettering is Noto Sans Black and Bold, bundled under `app/fonts/` under the SIL Open Font License (see `app/fonts/OFL.txt`). No Rockstar logo, wordmark, artwork, character or font is used anywhere — the lettering, layouts and grades are original.
+- The poster lettering is one of seven bundled display fonts (Anton, Bebas Neue, Monoton, Alfa Slab One, Bungee, Archivo Black, Noto Black) under `app/fonts/`, each with its SIL Open Font License text beside it. No Rockstar logo, wordmark, artwork, character or font is used anywhere — the lettering, layouts and grades are original.
 
 ## Layouts and grades
 

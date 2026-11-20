@@ -1,14 +1,16 @@
 // Fixed scenes for screenshots: ?shot=cover shows the cover alone at the
 // full viewport, ?shot=editor shows the editor with photos loaded.
 // Query knobs: layout, grade, size, photo1, photo2, title, subtitle,
-// color, pos, style (title style), badge, pgrade (per-panel grades,
-// comma-separated, one per panel, empty means follow the cover grade).
+// color, pos, style (title style), badge, font (title font),
+// pgrade (per-panel grades, comma-separated, one per panel, empty means
+// follow the cover grade).
 // window.__shotReady is set once the scene is painted, so a screenshot
 // script knows when to shoot.
 //
 // The cover scenes paint the app's own drawing at the viewport size — the
 // same drawing the Export button writes as a PNG, only scaled to fit.
-import { panelCount } from './state.js';
+import { panelCount, TITLE_FONTS } from './state.js';
+import { ensureFonts } from './cover.js';
 
 export async function runShot(shot, query, state, hooks) {
   const { redraw, renderStrip, loadImage } = hooks;
@@ -16,6 +18,7 @@ export async function runShot(shot, query, state, hooks) {
   if (query.get('layout')) state.layout = query.get('layout');
   if (query.get('grade')) state.grade = query.get('grade');
   if (query.get('size')) state.size = query.get('size');
+  if (query.get('font') && TITLE_FONTS[query.get('font')]) state.titleFont = query.get('font');
   if (query.get('title') !== null) state.title = query.get('title');
   if (query.get('subtitle') !== null) state.subtitle = query.get('subtitle');
   if (query.get('color')) state.titleColor = query.get('color');
@@ -57,6 +60,7 @@ export async function runShot(shot, query, state, hooks) {
   syncPicker('sizes', state.size);
   syncPicker('grades', state.grade);
   syncPicker('titleStyles', state.titleStyle);
+  syncPicker('titleFonts', state.titleFont);
   syncSwatches(state.titleColor);
   document.querySelectorAll('[name=captionPos]').forEach((r) => {
     r.checked = r.value === state.captionPos;
@@ -75,11 +79,9 @@ export async function runShot(shot, query, state, hooks) {
     if (controls) controls.scrollTop = controls.scrollHeight;
   }
   renderStrip();
-  if (document.fonts) {
-    await document.fonts.load('900 100px "Cover Black"').catch(() => {});
-    await document.fonts.load('700 40px "Cover Bold"').catch(() => {});
-    await document.fonts.ready.catch(() => {});
-  }
+  // Every bundled face, not just the two Noto faces: a shot taken before
+  // a display font arrives would show the fallback instead of the font.
+  await ensureFonts();
   redraw();
   requestAnimationFrame(() => requestAnimationFrame(() => { window.__shotReady = true; }));
 }
@@ -97,6 +99,7 @@ function pickerKeys(id) {
   if (id === 'layouts') return { solo: 1, 'duo-v': 1, 'duo-h': 1, trio: 1, 'trio-w': 1, quad: 1, 'big-center': 1, strip: 1, five: 1 };
   if (id === 'sizes') return { square: 1, portrait: 1, wide: 1 };
   if (id === 'titleStyles') return { solid: 1, gradient: 1, outline: 1 };
+  if (id === 'titleFonts') return { anton: 1, bebas: 1, monoton: 1, alfa: 1, bungee: 1, archivo: 1, noto: 1 };
   return { sunset: 1, neon: 1, pink: 1, ocean: 1, hotline: 1, midnight: 1, gold: 1, none: 1 };
 }
 
