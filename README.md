@@ -4,7 +4,11 @@
 [![rank](https://make.fun/badge/gta6-cover-art-01/khafidrifai/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 [![reward](https://make.fun/badge/gta6-cover-art-01/khafidrifai/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-cover-art-01)
 
-Vice City Cover Maker — turn your own photos and a caption into GTA-style cover art: multi-panel poster layouts, a sunset or neon colour grade, heavy outlined lettering, and a one-click PNG export in the three common post sizes (1080×1080, 1080×1350, 1920×1080). Everything runs offline in the browser; photos stay on your machine.
+Vice City Cover Maker — turn your own photos and a caption into GTA-style cover art: multi-panel poster layouts, strong sunset and neon colour grades, heavy outlined lettering, and a one-click PNG export in the three common post sizes (1080×1080, 1080×1350, 1920×1080). Everything runs offline in the browser; photos stay on your machine.
+
+## What's new in round 2
+
+More variety, more colour, sharper art. Nine panel layouts (Solo, Duo side-by-side and stacked, two Trios, Quad, Big Centre, Film Strip, and Five), seven colour grades plus Original — Sunset, Neon Nights, Vice Pink, Ocean Drive, Hotline, Midnight, and Gold Rush — and each panel can now carry its own grade, so the same photo reads differently in every panel. The grades hit harder too: a saturation and contrast boost plus a strong duotone wash per panel, instead of the round-1 whisper. The caption has three styles (Solid, Gradient, Outline), two more colours, and a badge/sticker line. The preview renders at the full post size with high-quality smoothing, so the lettering stays crisp.
 
 ## Run it
 
@@ -24,7 +28,7 @@ Then open http://localhost:8080 — add photos (or use the two samples), pick a 
 
 ## Layouts and grades
 
-Six panel layouts: Solo, Duo side-by-side, Duo stacked, Trio with a big left panel, Trio with a big top panel, and Quad. Three colour grades wash over the photos — Sunset (warm orange into pink), Neon Nights (cyan and magenta), Vice Pink — or Original with no grade. The caption sits on a dark scrim at the top or bottom, in white, yellow, pink, cyan or black, at a size you choose; a long title shrinks itself until it fits the cover.
+Nine panel layouts: Solo, Duo side-by-side, Duo stacked, Trio with a big left panel, Trio with a big top panel, Quad, Big Centre (a tall middle panel with two stacked panels on each side), Film Strip (a big top panel over three small ones), and Five (a big left panel with a 2×2 grid on the right). Seven colour grades land hard on the photos — Sunset (warm orange into pink), Neon Nights (cyan and magenta), Vice Pink, Ocean Drive (teal into hot orange), Hotline (hot pink and electric cyan), Midnight (violet into electric blue), and Gold Rush (gold into burning red) — or Original with no grade, and any panel can take a grade of its own. The caption sits on a dark scrim at the top or bottom, in white, yellow, pink, cyan, orange, lime or black, at a size you choose; a long title shrinks itself until it fits the cover. Title styles are Solid, Gradient (the title fades through the grade's colours) and Outline (hollow letters with a thick coloured edge), and a badge line prints as a small sticker pill in the grade's accent colour.
 
 ## Build it
 

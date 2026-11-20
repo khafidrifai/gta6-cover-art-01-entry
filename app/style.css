@@ -62,6 +62,7 @@ button:disabled { opacity: 0.4; cursor: default; }
 .picks { display: flex; flex-wrap: wrap; gap: 8px; }
 .pick { padding: 8px 11px; font-size: 13px; }
 .pick.active { background: #ff5da2; color: #fff; }
+.pick.mini { padding: 6px 9px; font-size: 12px; }
 .stack { display: flex; flex-direction: column; gap: 8px; }
 .stack button { text-align: left; font-weight: 600; }
 .stack button.active { background: #ff5da2; color: #fff; }
@@ -101,6 +102,18 @@ body.shot-cover #cover {
   width: 100vw; height: 100vh; max-width: none; max-height: none;
   object-fit: contain; border-radius: 0; box-shadow: none; cursor: default;
 }
+
+/* Editor screenshot scene: the controls column is tall (nine layouts, eight
+ * grades, caption styles), so compact it and let it scroll on its own — the
+ * shot script scrolls it to the caption and export groups, so every control
+ * is visible beside the live preview instead of cut off below the fold. */
+body.shot-editor .group { padding: 9px 12px; gap: 7px; }
+body.shot-editor .group .hint { display: none; }
+body.shot-editor .controls {
+  gap: 10px; max-height: calc(100vh - 150px); overflow-y: auto;
+  scrollbar-width: thin;
+}
+body.shot-editor .app { align-items: flex-start; }
 
 @media (max-width: 900px) {
   .app { flex-direction: column; }

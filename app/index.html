@@ -40,7 +40,9 @@
         <span id="zoomOut" class="zoom-out">Zoom 1.00×</span>
         <button id="fitPhoto" type="button">Fit photo</button>
       </div>
-      <p class="hint">Click a panel on the cover to select it, then drag its photo to move it.</p>
+      <span class="field-label">Selected panel's grade</span>
+      <div id="panelGrades" class="picks"></div>
+      <p class="hint">Click a panel on the cover to select it, then drag its photo to move it. A panel can carry its own grade — the same photo reads differently in each panel.</p>
     </section>
 
     <section class="group">
@@ -68,6 +70,11 @@
       </label>
       <label>Title size
         <input id="titleSize" type="range" min="0.7" max="1.4" step="0.05" value="1">
+      </label>
+      <span class="field-label">Title style</span>
+      <div id="titleStyles" class="picks"></div>
+      <label>Badge / sticker line
+        <input id="badge" type="text" maxlength="24" placeholder="e.g. LEONIDA • 2026" value="">
       </label>
       <div class="row between">
         <span class="field-label">Title colour</span>

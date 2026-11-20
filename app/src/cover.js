@@ -9,12 +9,20 @@
 
 import { SIZES, panelRects } from './state.js';
 
-/** The accent colours each grade paints with: [top, bottom, slash]. */
-const GRADE_COLORS = {
-  sunset: ['#ff9a3d', '#e53888', '#ffd23e'],
-  neon: ['#22d3ee', '#d946ef', '#37e6ff'],
-  pink: ['#ff5da2', '#7c3aed', '#ff8fd1'],
-  none: [null, null, null],
+/** The accent colours each grade paints with, and how hard it paints them.
+ * top/bottom are the duotone ends, accent is the slash and badge colour,
+ * sat/contrast boost the photo first, and alpha is how strong the duotone
+ * wash lands. Round 2 grades are deliberately punchy: the wash is obvious
+ * at a glance, not a whisper. */
+const GRADE_DEFS = {
+  sunset: { top: '#ff9a3d', bottom: '#e53888', accent: '#ffd23e', sat: 1.5, contrast: 1.1, alpha: 0.52 },
+  neon: { top: '#22d3ee', bottom: '#d946ef', accent: '#37e6ff', sat: 1.55, contrast: 1.12, alpha: 0.55 },
+  pink: { top: '#ff5da2', bottom: '#7c3aed', accent: '#ff8fd1', sat: 1.5, contrast: 1.1, alpha: 0.52 },
+  ocean: { top: '#2dd4bf', bottom: '#f97316', accent: '#fde047', sat: 1.55, contrast: 1.1, alpha: 0.55 },
+  hotline: { top: '#ff2e88', bottom: '#00e5ff', accent: '#ffe600', sat: 1.6, contrast: 1.12, alpha: 0.58 },
+  midnight: { top: '#7c3aed', bottom: '#2563eb', accent: '#a78bfa', sat: 1.45, contrast: 1.1, alpha: 0.55 },
+  gold: { top: '#fbbf24', bottom: '#dc2626', accent: '#fde68a', sat: 1.55, contrast: 1.1, alpha: 0.55 },
+  none: { top: null, bottom: null, accent: null, sat: 1, contrast: 1, alpha: 0 },
 };
 
 /**
@@ -25,6 +33,10 @@ const GRADE_COLORS = {
 export function drawCover(canvas, state) {
   const ctx = canvas.getContext('2d');
   const { width: w, height: h } = canvas;
+  // Crisp scaling: the preview canvas is already full post size, and the
+  // export is the same drawing, so photos and lettering stay sharp.
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   // Gutter and frame stay 10 and 14 pixels at the 1080 reference size, so a
   // cover looks the same in every post size.
   const unit = Math.min(w, h) / 1080;
@@ -46,7 +58,7 @@ export function drawCover(canvas, state) {
     drawPanel(ctx, state, i, x, y, pw, ph);
   }
 
-  paintGrade(ctx, state.grade, w, h, frame);
+  paintVignette(ctx, w, h);
   paintSlash(ctx, state.grade, w, h);
   paintCaption(ctx, state, w, h);
 
@@ -56,14 +68,19 @@ export function drawCover(canvas, state) {
   ctx.strokeRect(frame / 2, frame / 2, w - frame, h - frame);
 }
 
-/** One photo panel: the photo cover-fitted with its zoom and pan, or a gradient. */
+/** One photo panel: the photo cover-fitted with its zoom and pan, graded hard
+ * in the panel's own grade (or the cover's grade when the panel has none),
+ * or a gradient when the panel is empty. */
 function drawPanel(ctx, state, index, x, y, pw, ph) {
+  const crop = state.panels[index];
+  const grade = (crop && crop.grade) || state.grade;
+  const def = GRADE_DEFS[grade] || GRADE_DEFS.none;
+
   ctx.save();
   ctx.beginPath();
   ctx.rect(x, y, pw, ph);
   ctx.clip();
 
-  const crop = state.panels[index];
   const entry = crop && crop.photo >= 0 ? state.photos[crop.photo] : null;
   const photo = entry ? entry.img : null;
   if (photo) {
@@ -74,13 +91,37 @@ function drawPanel(ctx, state, index, x, y, pw, ph) {
     // Pan across the spare photo the zoom leaves: ox/oy run -1..1.
     const dx = x + (pw - dw) / 2 + (crop.ox || 0) * ((dw - pw) / 2);
     const dy = y + (ph - dh) / 2 + (crop.oy || 0) * ((dh - ph) / 2);
+    // Saturate and add contrast first, so the duotone has vivid colour to bite.
+    ctx.filter = `saturate(${def.sat}) contrast(${def.contrast})`;
     ctx.drawImage(photo, dx, dy, dw, dh);
+    ctx.filter = 'none';
   } else {
     const g = ctx.createLinearGradient(x, y, x + pw, y + ph);
     g.addColorStop(0, '#3b1d5e');
     g.addColorStop(1, '#160a24');
     ctx.fillStyle = g;
     ctx.fillRect(x, y, pw, ph);
+  }
+
+  // The duotone: a strong two-stop wash in 'overlay', then a 'color' pass
+  // that pushes the hues further without flattening the photo's light.
+  if (grade !== 'none') {
+    ctx.save();
+    ctx.globalCompositeOperation = 'overlay';
+    ctx.globalAlpha = def.alpha;
+    const wash = ctx.createLinearGradient(x, y, x + pw * 0.4, y + ph);
+    wash.addColorStop(0, def.top);
+    wash.addColorStop(1, def.bottom);
+    ctx.fillStyle = wash;
+    ctx.fillRect(x, y, pw, ph);
+    ctx.globalCompositeOperation = 'color';
+    ctx.globalAlpha = 0.28;
+    const hue = ctx.createLinearGradient(x, y, x, y + ph);
+    hue.addColorStop(0, def.top);
+    hue.addColorStop(1, def.bottom);
+    ctx.fillStyle = hue;
+    ctx.fillRect(x, y, pw, ph);
+    ctx.restore();
   }
 
   // A whisper of shade at the panel's foot, so panels read as separate shots.
@@ -97,27 +138,11 @@ function drawPanel(ctx, state, index, x, y, pw, ph) {
   ctx.strokeRect(x, y, pw, ph);
 }
 
-/** Washes the grade over the whole cover: a tint, then a glow, then a vignette. */
-function paintGrade(ctx, grade, w, h, frame) {
-  if (grade === 'none') return;
-  const [top, bottom] = GRADE_COLORS[grade];
+/** Vignette only: dark corners pull the eye to the middle. The colour work
+ * now lives in each panel (drawPanel), so the grade is strong panel by panel
+ * instead of one weak wash over the whole cover. */
+function paintVignette(ctx, w, h) {
   ctx.save();
-  ctx.globalCompositeOperation = 'overlay';
-  const wash = ctx.createLinearGradient(0, 0, w * 0.4, h);
-  wash.addColorStop(0, top);
-  wash.addColorStop(1, bottom);
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 0, w, h);
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 0.16;
-  const tint = ctx.createLinearGradient(0, 0, 0, h);
-  tint.addColorStop(0, top);
-  tint.addColorStop(1, bottom);
-  ctx.fillStyle = tint;
-  ctx.fillRect(0, 0, w, h);
-  ctx.globalAlpha = 1;
-  // Vignette: dark corners pull the eye to the middle.
   const vig = ctx.createRadialGradient(
     w / 2, h / 2, Math.min(w, h) * 0.42,
     w / 2, h / 2, Math.max(w, h) * 0.75,
@@ -132,7 +157,7 @@ function paintGrade(ctx, grade, w, h, frame) {
 /** A diagonal slash of the grade's accent colour across the top corner. */
 function paintSlash(ctx, grade, w, h) {
   if (grade === 'none') return;
-  const accent = GRADE_COLORS[grade][2];
+  const accent = GRADE_DEFS[grade].accent;
   ctx.save();
   ctx.translate(w, 0);
   ctx.rotate(Math.PI / 4);
@@ -148,7 +173,8 @@ function paintSlash(ctx, grade, w, h) {
 function paintCaption(ctx, state, w, h) {
   const title = (state.title || '').trim().toUpperCase();
   const subtitle = (state.subtitle || '').trim().toUpperCase();
-  if (!title && !subtitle) return;
+  const hasBadge = Boolean((state.badge || '').trim());
+  if (!title && !subtitle && !hasBadge) return;
 
   const atTop = state.captionPos === 'top';
   const bandH = h * 0.3;
@@ -173,15 +199,48 @@ function paintCaption(ctx, state, w, h) {
       try { ctx.letterSpacing = `${Math.round(size * 0.03)}px`; } catch { /* ignore */ }
     }
     const ty = atTop ? h * 0.16 : h - h * 0.1;
+    const style = state.titleStyle || 'solid';
+    const def = GRADE_DEFS[state.grade] || GRADE_DEFS.none;
+    const ink = state.titleColor || '#ffffff';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(16, 6, 26, 0.9)';
-    ctx.lineWidth = Math.max(3, size * 0.09);
     ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
     ctx.shadowBlur = size * 0.18;
     ctx.shadowOffsetY = size * 0.04;
-    ctx.strokeText(title, cx, ty);
-    ctx.fillStyle = state.titleColor || '#ffffff';
-    ctx.fillText(title, cx, ty);
+    if (style === 'gradient') {
+      // The title fades through the grade's colours, left to right.
+      const grad = ctx.createLinearGradient(cx - w * 0.3, 0, cx + w * 0.3, 0);
+      if (state.grade === 'none') {
+        grad.addColorStop(0, ink);
+        grad.addColorStop(0.5, '#ffd23e');
+        grad.addColorStop(1, ink);
+      } else {
+        grad.addColorStop(0, def.top);
+        grad.addColorStop(0.5, def.accent);
+        grad.addColorStop(1, def.bottom);
+      }
+      ctx.strokeStyle = 'rgba(16, 6, 26, 0.9)';
+      ctx.lineWidth = Math.max(3, size * 0.08);
+      ctx.strokeText(title, cx, ty);
+      ctx.fillStyle = grad;
+      ctx.fillText(title, cx, ty);
+    } else if (style === 'outline') {
+      // Hollow letters: a dark fill under a thick coloured edge, so the
+      // outline reads on any photo behind it.
+      ctx.fillStyle = 'rgba(16, 6, 26, 0.45)';
+      ctx.fillText(title, cx, ty);
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = Math.max(3, size * 0.07);
+      ctx.strokeText(title, cx, ty);
+      ctx.strokeStyle = 'rgba(16, 6, 26, 0.85)';
+      ctx.lineWidth = Math.max(1.5, size * 0.02);
+      ctx.strokeText(title, cx, ty);
+    } else {
+      ctx.strokeStyle = 'rgba(16, 6, 26, 0.9)';
+      ctx.lineWidth = Math.max(3, size * 0.1);
+      ctx.strokeText(title, cx, ty);
+      ctx.fillStyle = ink;
+      ctx.fillText(title, cx, ty);
+    }
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
     ctx.shadowOffsetY = 0;
@@ -198,6 +257,46 @@ function paintCaption(ctx, state, w, h) {
     ctx.fillText(subtitle, cx, sy);
     try { ctx.letterSpacing = '0px'; } catch { /* ignore */ }
   }
+
+  // The badge: a small sticker pill in the grade's accent colour, above the
+  // title at the bottom or below the subtitle at the top.
+  const badge = (state.badge || '').trim().toUpperCase();
+  if (badge) {
+    const def = GRADE_DEFS[state.grade] || GRADE_DEFS.none;
+    const bSize = Math.max(12, h * 0.026 * (state.titleSize || 1));
+    ctx.font = `700 ${bSize}px "Cover Bold", "Noto Sans", sans-serif`;
+    try { ctx.letterSpacing = `${Math.round(bSize * 0.28)}px`; } catch { /* ignore */ }
+    const tw = ctx.measureText(badge).width;
+    const padX = bSize * 0.9;
+    const padY = bSize * 0.55;
+    const bw = tw + padX * 2;
+    const bh = bSize + padY * 2;
+    const bx = cx - bw / 2;
+    const by = atTop
+      ? h * 0.16 + base * 0.72 + Math.max(12, h * 0.032) * 1.7
+      : h - h * 0.1 - base * 1.05 - bh;
+    ctx.fillStyle = def.accent || '#ffd23e';
+    roundRect(ctx, bx, by, bw, bh, bh / 2);
+    ctx.fill();
+    ctx.fillStyle = '#1d1b22';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(badge, cx, by + bh / 2 + bSize * 0.04);
+    ctx.textBaseline = 'alphabetic';
+    try { ctx.letterSpacing = '0px'; } catch { /* ignore */ }
+  }
+}
+
+/** A rounded rectangle path, without relying on ctx.roundRect. */
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
 }
 
 /** The pixel size a state exports at. */

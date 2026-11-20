@@ -7,7 +7,7 @@
 // drawCover paints any state at any pixel size, so what you see is what the
 // PNG holds.
 import { drawCover, exportSize } from './cover.js';
-import { defaultState, panelCount, panelRects, SIZES, LAYOUTS, GRADES, TITLE_COLORS } from './state.js';
+import { defaultState, panelCount, panelRects, SIZES, LAYOUTS, GRADES, TITLE_COLORS, TITLE_STYLES } from './state.js';
 import { runShot } from './shots.js';
 
 const canvas = document.getElementById('cover');
@@ -85,6 +85,55 @@ function updatePanelButtons() {
   zoom.value = state.panels[state.selected].zoom;
   document.getElementById('zoomOut').textContent =
     `Zoom ${state.panels[state.selected].zoom.toFixed(2)}×`;
+  // The selected panel's own grade: null means it follows the cover's grade.
+  const pg = state.panels[state.selected].grade;
+  document.querySelectorAll('#panelGrades [data-grade]').forEach((btn) => {
+    btn.classList.toggle('active', (btn.dataset.grade || null) === pg);
+  });
+}
+
+/** Builds the selected panel's own grade picker: "Cover grade" (follow the
+ * cover) or one grade of its own, so the same photo reads differently per
+ * panel. */
+function buildPanelGradePicker() {
+  const box = document.getElementById('panelGrades');
+  box.innerHTML = '';
+  const choices = [{ key: null, label: 'Cover grade' }];
+  Object.entries(GRADES).forEach(([key, def]) => choices.push({ key, label: def.label }));
+  choices.forEach(({ key, label }) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pick mini';
+    btn.dataset.grade = key ?? '';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      state.panels[state.selected].grade = key;
+      box.querySelectorAll('.pick').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      redraw();
+    });
+    box.append(btn);
+  });
+}
+
+/** Builds the caption style picker (solid, gradient, outline). */
+function buildTitleStylePicker() {
+  const box = document.getElementById('titleStyles');
+  box.innerHTML = '';
+  Object.entries(TITLE_STYLES).forEach(([key, def]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pick' + (key === state.titleStyle ? ' active' : '');
+    btn.textContent = def.label;
+    if (def.hint) btn.title = def.hint;
+    btn.addEventListener('click', () => {
+      state.titleStyle = key;
+      box.querySelectorAll('.pick').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      redraw();
+    });
+    box.append(btn);
+  });
 }
 
 /** Adds files as photos, then paints. */
@@ -235,9 +284,11 @@ function wire() {
     redraw();
   });
   buildSwatches();
+  buildPanelGradePicker();
+  buildTitleStylePicker();
 
   const panelBox = document.getElementById('panels');
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 5; i++) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.panel = String(i);
@@ -275,6 +326,10 @@ function wire() {
   const subtitle = document.getElementById('subtitle');
   title.addEventListener('input', () => { state.title = title.value; redraw(); });
   subtitle.addEventListener('input', () => { state.subtitle = subtitle.value; redraw(); });
+  document.getElementById('badge').addEventListener('input', (e) => {
+    state.badge = e.target.value;
+    redraw();
+  });
   document.getElementById('titleSize').addEventListener('input', (e) => {
     state.titleSize = Number(e.target.value);
     redraw();
